@@ -71,7 +71,7 @@ public class NoteblockMusicYoinker
 		float volume = event.getSound().getVolume();
 		LOGGER.info("Recording " + felbontott_nev[2] + " at time " + time_passed + " with pitch " + pitch + " and volume " + volume + ".");
 	    try {
-	    	// we're opening and closing the file every time we add a line to it, performance could be improved
+	        // we're opening and closing the file every time we add a line to it, performance could be improved
 	        FileWriter myWriter = new FileWriter(file_to_write, true);
 	        myWriter.append(felbontott_nev[2] + "," + time_passed + "," + pitch + "," + volume + "\n");
 	        myWriter.close();
