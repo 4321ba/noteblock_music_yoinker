@@ -16,4 +16,6 @@ Music is recorded in csv format separated with `,`, every line is a new note.
 3rd value is the pitch ranging from 0.5 to 2.0.  
 4th value is the volume ranging from 0 to 1, but it's sometimes 3 too (from real note block).
 
-I also made a Python script to turn this data into a MIDI file, I'll put a link to the repo here when I upload it.
+# Python script
+
+I also made a Python script to turn this data into a MIDI file: `converter.py`
