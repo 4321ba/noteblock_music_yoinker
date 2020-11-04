@@ -18,4 +18,4 @@ Music is recorded in csv format separated with `,`, every line is a new note.
 
 # Python script
 
-I also made a Python script to turn this data into a MIDI file: `converter.py`
+I also made a Python script to turn this data into a MIDI file: `converter.py`.
