@@ -4,6 +4,7 @@
 Requires Minecraft 1.15.2 and Forge.
 
 One and only release is `noteblock_music_yoinker-1.0.jar`.
+That will currently not work if your system doesn't like colons in filenames because of issue #1, but the fix is in master now thanks to @GAsplund.
 
 # Usage
 
