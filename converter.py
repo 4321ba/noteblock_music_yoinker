@@ -88,7 +88,7 @@ def convert_and_add_off(data, use_normal_percussion):
         current_midi_tick = i[0] + delay_to_noteoff
         new_data.append(["2", str(current_midi_tick), "Note_off_c", str(i[1]), str(i[2]), "0"])
         
-    new_data.append(["2", str(current_midi_tick), "End_track"])
+    new_data.append(["2", str(current_midi_tick + 40), "End_track"])
     new_data.append(["0", "0", "End_of_file"])
     return new_data
 
