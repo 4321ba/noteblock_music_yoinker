@@ -48,7 +48,7 @@ public class NoteblockMusicYoinker
         if(event.getKey() != GLFW.GLFW_KEY_R || event.getAction() != GLFW.GLFW_PRESS) return;
 		is_writing_to_file = !is_writing_to_file;
     	if (is_writing_to_file) {
-    		file_to_write = "recorded_music/" + java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv";
+    		file_to_write = "recorded_music/" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".csv";
     		// make a folder if there isn't one
     		File theDir = new File("recorded_music");
 			if (!theDir.exists()){
