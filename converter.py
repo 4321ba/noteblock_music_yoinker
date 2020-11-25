@@ -12,6 +12,7 @@ def parse_arguments():
     parser.add_argument("-p", "--alternate_percussion", action='store_false', dest="use_normal_percussion", help="uses different pitches for percussion to look good in MIDI visualizer if set, but those pitches map to different instuments and sound bad")
     parser.add_argument("-m", "--melodic_percussion", action='store_true', dest="use_melodic_percussion", help="maps percussion instruments to piano to preserve pitch (snare: program 0, hat: program 1, basedrum: program 2)")
     parser.add_argument("-k", "--keep_newcsv", action='store_true', dest="keep_newcsv", help="keep the generated temporary file *.newcsv")
+    parser.add_argument("-e", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4, can determine automatically")
     return vars(parser.parse_args())
 
 def get_input_files(files):
@@ -25,24 +26,24 @@ def import_csv_file(file):
         csv_data = csv.reader(csv_file, delimiter=',', quotechar='|')
         return [row for row in csv_data]
 
-def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion):
+def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion, metronome):
     instruments = {  #"name": [channel, program_for_melody_instrument_or_pitch_for_percussion, pitches_to_shift]
         "harp": [0, 6, 0],
         "bass": [2, 32, -24], #MIDI visualizer matches channel 9 to channel 1 and I need bass to be separate from percussion
         "snare": [9, 38 if use_normal_percussion else 26, 0], #sadly we can't convert pitch for percussion (channel 9) instruments,
         "hat": [9, 42 if use_normal_percussion else 28, 0], #because it is needed for different percussion instruments
         "basedrum": [9, 35 if use_normal_percussion else 24, 0],
-        "bell": [3, 14, 24],
-        "flute": [4, 73, 12],
-        "chime": [5, 112, 24],
-        "guitar": [6, 24, -12],
-        "xylophone": [7, 12, 24],
-        "iron_xylophone": [8, 11, 0],
-        "cow_bell": [11, 113, 12], #mapped to agogo because cowbell is a percussion instrument
-        "didgeridoo": [12, 111, -24], #mapped to shehnai because there's no didgeridoo
-        "bit": [13, 80, 0],
-        "banjo": [14, 105, 0],
-        "pling": [15, 4, 0],
+#        "bell": [3, 14, 24], #uncomment these if you want to record music with these instruments too (Wynncraft doesn't have these)
+#        "flute": [4, 73, 12],
+#        "chime": [5, 112, 24],
+#        "guitar": [6, 24, -12],
+#        "xylophone": [7, 12, 24],
+#        "iron_xylophone": [8, 11, 0],
+#        "cow_bell": [11, 113, 12], #mapped to agogo because cowbell is a percussion instrument
+#        "didgeridoo": [12, 111, -24], #mapped to shehnai because there's no didgeridoo
+#        "bit": [13, 80, 0],
+#        "banjo": [14, 105, 0],
+#        "pling": [15, 4, 0],
     } if not use_melodic_percussion else {
         "harp": [0, 6, 0],
         "bass": [2, 32, -24],
@@ -51,11 +52,33 @@ def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion):
         "basedrum": [5, 2, -49],
     }
     
+    if metronome == -1:
+        #try to determine timing info from data
+        timings = {}
+        metronome = 4
+        for i in data:
+            if not int(i[1]) in timings.keys():
+                timings[int(i[1])] = 0
+            timings[int(i[1])] += 1
+        timings = {key: value for key, value in sorted(timings.items(), key = lambda item: 1.0 / item[1])}
+        #determine metronome value (the smallest timing used without the lag), mostly a frequent value
+        possible_metronome_ticks = list(timings.keys())[0:3]
+        if 0 in possible_metronome_ticks:
+            possible_metronome_ticks.remove(0)
+        possible_metronome_ticks = possible_metronome_ticks[0:2]
+        if (possible_metronome_ticks[0] / possible_metronome_ticks[1]).is_integer():
+            metronome = possible_metronome_ticks[1]
+        elif (possible_metronome_ticks[1] / possible_metronome_ticks[0]).is_integer():
+            metronome = possible_metronome_ticks[0]
+        else:
+            print("Couldn't determine metronome value in", possible_metronome_ticks, "from", timings)
+    print("using metronome value of", metronome) #metronome is frequently 4 or 6, which I considered 16th notes
+    
     new_data = [
-        ["0", "0", "Header", "1", "2", "20"],
+        ["0", "0", "Header", "1", "2", str(metronome * 4)], #number of clock pulses per quarter note
         ["1", "0", "Start_track"],
-        ["1", "0", "Time_signature", "4", "2", "5", "8"],
-        ["1", "0", "Tempo", "500000"],
+#        ["1", "0", "Time_signature", "4", "2", "5", "8"], #why would I provide anything if I know nothing about this
+        ["1", "0", "Tempo", str(metronome * 100000)], #milliseconds per quarter note, 40 midi ticks always mean 1 second
         ["1", "0", "End_track"],
         ["2", "0", "Start_track"],
         ]
@@ -117,7 +140,7 @@ def main():
     args = parse_arguments()
     for file in get_input_files(args["input_files"]):
         data = import_csv_file(file)
-        data = convert_and_add_off(data, args["use_normal_percussion"], args["use_melodic_percussion"])
+        data = convert_and_add_off(data, args["use_normal_percussion"], args["use_melodic_percussion"], args["metronome"])
         convert_to_midi_file(data, file[:-4], args["keep_newcsv"])
 
 if __name__ == '__main__':
