@@ -2,9 +2,9 @@
 
 import math
 import os
-import csv
 import py_midicsv
 import argparse
+import noteblock_music_utility
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="convert specific .csv files to .mid files")
@@ -14,17 +14,6 @@ def parse_arguments():
     parser.add_argument("-k", "--keep_newcsv", action='store_true', dest="keep_newcsv", help="keep the generated temporary file *.newcsv")
     parser.add_argument("-e", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4, can determine automatically")
     return vars(parser.parse_args())
-
-def get_input_files(files):
-    if len(files) == 0:
-        return [i for i in os.listdir() if i[-4:] == ".csv"]
-    else:
-        return files
-
-def import_csv_file(file):
-    with open(file, newline='') as csv_file:
-        csv_data = csv.reader(csv_file, delimiter=',', quotechar='|')
-        return [row for row in csv_data]
 
 def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion, metronome):
     instruments = {  #"name": [channel, program_for_melody_instrument_or_pitch_for_percussion, pitches_to_shift]
@@ -52,33 +41,13 @@ def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion, met
         "basedrum": [5, 2, -49],
     }
     
-    if metronome == -1:
-        #try to determine timing info from data
-        timings = {}
-        metronome = 4
-        for i in data:
-            if not int(i[1]) in timings.keys():
-                timings[int(i[1])] = 0
-            timings[int(i[1])] += 1
-        timings = {key: value for key, value in sorted(timings.items(), key = lambda item: 1.0 / item[1])}
-        #determine metronome value (the smallest timing used without the lag), mostly a frequent value
-        possible_metronome_ticks = list(timings.keys())[0:3]
-        if 0 in possible_metronome_ticks:
-            possible_metronome_ticks.remove(0)
-        possible_metronome_ticks = possible_metronome_ticks[0:2]
-        if (possible_metronome_ticks[0] / possible_metronome_ticks[1]).is_integer():
-            metronome = possible_metronome_ticks[1]
-        elif (possible_metronome_ticks[1] / possible_metronome_ticks[0]).is_integer():
-            metronome = possible_metronome_ticks[0]
-        else:
-            print("Couldn't determine metronome value in", possible_metronome_ticks, "from", timings)
-    print("using metronome value of", metronome) #metronome is frequently 4 or 6, which I considered 16th notes
+    metronome = noteblock_music_utility.get_metronome_info(data, metronome, False)
     
     new_data = [
         ["0", "0", "Header", "1", "2", str(metronome * 4)], #number of clock pulses per quarter note
         ["1", "0", "Start_track"],
 #        ["1", "0", "Time_signature", "4", "2", "5", "8"], #why would I provide anything if I know nothing about this
-        ["1", "0", "Tempo", str(metronome * 100000)], #milliseconds per quarter note, 40 midi ticks always mean 1 second
+        ["1", "0", "Tempo", str(metronome * 100000)], #The tempo is specified as the Number of microseconds per quarter note; 40 midi ticks always mean 1 second
         ["1", "0", "End_track"],
         ["2", "0", "Start_track"],
         ]
@@ -100,10 +69,13 @@ def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion, met
                 new_data.append(["2", str(finished_note[0] + delay_to_noteoff), "Note_off_c", str(finished_note[1]), str(finished_note[2]), "0"])
                 if len(notes_waiting_for_off) == 0:
                     break
-            
+        
+        if i[2] == "0.0": #somehow the pitch got 0.0 (it should be between 0.5 and 2) and math.log threw an error (understandably)
+            continue #this happened in Endless Climb (Tower of Ascension 1) 2 times e.g.
+        
         channel = instruments[i[0]][0]
         note = int(math.log(float(i[2]), 2) * 12 + 66.5) + instruments[i[0]][2] if channel != 9 else instruments[i[0]][1]
-        volume = 127 if float(i[3]) > 1.0 else int(float(i[3]) * 127 + 0.5)
+        volume = 127 if float(i[3]) > 1.0 else int(math.sqrt(float(i[3])) * 127 + 0.5)
         
         for jndex, j in enumerate(notes_waiting_for_off): #trying to see if there's the same note already playing and offing it
             if channel == j[1] and note == j[2]:
@@ -138,8 +110,8 @@ def convert_to_midi_file(data, file, keep_newcsv):
 
 def main():
     args = parse_arguments()
-    for file in get_input_files(args["input_files"]):
-        data = import_csv_file(file)
+    for file in noteblock_music_utility.get_input_files(args["input_files"]):
+        data = noteblock_music_utility.import_csv_file(file)
         data = convert_and_add_off(data, args["use_normal_percussion"], args["use_melodic_percussion"], args["metronome"])
         convert_to_midi_file(data, file[:-4], args["keep_newcsv"])
 

@@ -2,25 +2,14 @@
 
 import math
 import os
-import csv
 import argparse
+import noteblock_music_utility
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="simplify specific .csv files by removing notes under a certain volume")
     parser.add_argument("input_files", nargs="*", default = [], help="csv files to convert, leave blank for all from current directory")
     parser.add_argument("-v", "--volume", type=float, default = 0.71, help="removes the notes under this value")
     return vars(parser.parse_args())
-
-def get_input_files(files):
-    if len(files) == 0:
-        return [i for i in os.listdir() if i[-4:] == ".csv" and not i[-15:-4] == "_simplified"]
-    else:
-        return files
-
-def import_csv_file(file):
-    with open(file, newline='') as csv_file:
-        csv_data = csv.reader(csv_file, delimiter=',', quotechar='|')
-        return [row for row in csv_data]
 
 def remove_quiet_notes(data, volume):
     new_data = []
@@ -33,19 +22,13 @@ def remove_quiet_notes(data, volume):
             delay_to_add = 0
     return new_data
 
-def create_file(data, file):
-    new_data = [','.join(i) for i in data]
-    csv_string = '\n'.join(new_data) + '\n'
-    with open(file, "w") as output_csv:
-        output_csv.write(csv_string)
-
 def main():
     args = parse_arguments()
-    for file in get_input_files(args["input_files"]):
-        data = import_csv_file(file)
+    for file in [i for i in noteblock_music_utility.get_input_files(args["input_files"]) if not i[-15:-4] == "_simplified"]:
+        data = noteblock_music_utility.import_csv_file(file)
         data = remove_quiet_notes(data, args["volume"])
         data[0][1] = "0"
-        create_file(data, file[:-4] + "_simplified.csv")
+        noteblock_music_utility.create_csv_file(data, file[:-4] + "_simplified.csv")
 
 if __name__ == '__main__':
     main()
