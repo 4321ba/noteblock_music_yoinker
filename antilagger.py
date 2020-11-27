@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-import math
-import os
 import argparse
 import noteblock_music_utility
 

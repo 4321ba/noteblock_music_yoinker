@@ -24,7 +24,7 @@ def create_csv_file(data, file):
 def get_metronome_info(data, metronome, return_timings): #metronome is the value defined by the user, -1 if nothing is defined
     
     if metronome != -1 and not return_timings:
-        print("Metronome value is ", metronome)
+        print("Metronome value is", metronome)
         return metronome
     
     #get timing info from data
@@ -53,7 +53,7 @@ def get_metronome_info(data, metronome, return_timings): #metronome is the value
                 metronome = possible_metronome_ticks[1]
         else:
             sysexit("Couldn't find metronome value in " + str(possible_metronome_ticks) + " from " + str(timings))
-    print("Metronome value is ", metronome)
+    print("Metronome value is", metronome)
 
     if return_timings:
         return metronome, timings
