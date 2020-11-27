@@ -20,4 +20,5 @@ Music is recorded in csv format separated with `,`, every line is a new note.
 
 I also made a Python script to turn this data into a MIDI file: `converter.py`.  
 Use `antilagger.py` to even out the timings: e.g. replace 7 and then 5 with 6 and 6.  
-Use `simplifier.py` to remove quiet notes and thus simplify the midi.
+Use `simplifier.py` to remove quiet notes and thus simplify the midi.  
+Use `amplifier.py` to amplify the beginning of the music, and compensate for the intro of Wynncraft.
