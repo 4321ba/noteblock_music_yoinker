@@ -9,19 +9,20 @@ import noteblock_music_utility
 def parse_arguments():
     parser = argparse.ArgumentParser(description="convert specific .csv files to .mid files")
     parser.add_argument("input_files", nargs="*", default = [], help="csv files to convert, leave blank for all from current directory")
-    parser.add_argument("-p", "--alternate_percussion", action='store_false', dest="use_normal_percussion", help="uses different pitches for percussion to look good in MIDI visualizer if set, but those pitches map to different instuments and sound bad")
-    parser.add_argument("-m", "--melodic_percussion", action='store_true', dest="use_melodic_percussion", help="maps percussion instruments to piano to preserve pitch (snare: program 0, hat: program 1, basedrum: program 2)")
+    parser.add_argument("-v", "--visual_percussion", action='store_true', dest="use_visual_percussion", help="uses different pitches for percussion to look good in MIDI visualizer if set, but those pitches map to different instuments and sound bad")
+    parser.add_argument("-m", "--melodic_percussion", action='store_true', dest="use_melodic_percussion", help="maps percussion instruments to random drums to preserve pitch (snare: program 114, hat: program 119, basedrum: program 116)")
     parser.add_argument("-k", "--keep_newcsv", action='store_true', dest="keep_newcsv", help="keep the generated temporary file *.newcsv")
     parser.add_argument("-e", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4, can determine automatically")
+    parser.add_argument("-l", "--note_length", type=float, default = -1, help="the number of ticks (1/40 s) for the notes to turn off, if <0 then multiplies the metronome value, default is -1, so it's the same as the metronome value")
     return vars(parser.parse_args())
 
-def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion, metronome):
+def convert_and_add_off(data, use_visual_percussion, use_melodic_percussion, metronome, note_length):
     instruments = {  #"name": [channel, program_for_melody_instrument_or_pitch_for_percussion, pitches_to_shift]
         "harp": [0, 6, 0],
         "bass": [2, 32, -24], #MIDI visualizer matches channel 9 to channel 1 and I need bass to be separate from percussion
-        "snare": [9, 38 if use_normal_percussion else 26, 0], #sadly we can't convert pitch for percussion (channel 9) instruments,
-        "hat": [9, 42 if use_normal_percussion else 28, 0], #because it is needed for different percussion instruments
-        "basedrum": [9, 35 if use_normal_percussion else 24, 0],
+        "snare": [9, 38 if not use_visual_percussion else 26, 0], #sadly we can't convert pitch for percussion (channel 9) instruments,
+        "hat": [9, 42 if not use_visual_percussion else 28, 0], #because it is needed for different percussion instruments
+        "basedrum": [9, 35 if not use_visual_percussion else 24, 0],
 #        "bell": [3, 14, 24], #uncomment these if you want to record music with these instruments too (Wynncraft doesn't have these)
 #        "flute": [4, 73, 12],
 #        "chime": [5, 112, 24],
@@ -36,9 +37,9 @@ def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion, met
     } if not use_melodic_percussion else {
         "harp": [0, 6, 0],
         "bass": [2, 32, -24],
-        "snare": [3, 0, -49],
-        "hat": [4, 1, -49],
-        "basedrum": [5, 2, -49],
+        "snare": [3, 114, -49],
+        "hat": [4, 119, -49],
+        "basedrum": [5, 116, -49],
     }
     
     metronome = noteblock_music_utility.get_metronome_info(data, metronome, False)
@@ -57,7 +58,7 @@ def convert_and_add_off(data, use_normal_percussion, use_melodic_percussion, met
             new_data.append(["2", "0", "Program_c", str(instruments[i][0]), str(instruments[i][1])])
     
     current_midi_tick = 0
-    delay_to_noteoff = 8 #measured in (1/40)s (midi clock)
+    delay_to_noteoff = int(-note_length * metronome + 0.5 if note_length < 0 else note_length + 0.5) #measured in (1/40)s (midi clock)
     notes_waiting_for_off = [] #[[current_tick_when_started, channel, note], [...]]
     
     for i in data:
@@ -112,7 +113,7 @@ def main():
     args = parse_arguments()
     for file in noteblock_music_utility.get_input_files(args["input_files"]):
         data = noteblock_music_utility.import_csv_file(file)
-        data = convert_and_add_off(data, args["use_normal_percussion"], args["use_melodic_percussion"], args["metronome"])
+        data = convert_and_add_off(data, args["use_visual_percussion"], args["use_melodic_percussion"], args["metronome"], args["note_length"])
         convert_to_midi_file(data, file[:-4], args["keep_newcsv"])
 
 if __name__ == '__main__':

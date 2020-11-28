@@ -42,7 +42,9 @@ def get_metronome_info(data, metronome, return_timings): #metronome is the value
             possible_metronome_ticks.remove(0)
         possible_metronome_ticks = possible_metronome_ticks[0:2] #get 2 most frequent delays that aren't 0
         
-        if (possible_metronome_ticks[0] / possible_metronome_ticks[1]).is_integer(): #one is the multiplicate of the other
+        if len(possible_metronome_ticks) == 1:
+            metronome = possible_metronome_ticks[0]
+        elif (possible_metronome_ticks[0] / possible_metronome_ticks[1]).is_integer(): #one is the multiplicate of the other
             metronome = possible_metronome_ticks[1]
         elif (possible_metronome_ticks[1] / possible_metronome_ticks[0]).is_integer():
             metronome = possible_metronome_ticks[0]
