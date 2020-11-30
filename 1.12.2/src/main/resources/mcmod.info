@@ -1,0 +1,15 @@
+[
+{
+  "modid": "noteblock_music_yoinker",
+  "name": "Noteblock Music Yoinker",
+  "description": "Press R to start recording music to the .minecraft/recorded_music folder. Press R again to stop recording.\n\nFile format:\nMusic is recorded in csv format, every line is a new note.\n1st value is the instrument.\n2nd value is the number of ticks since the previous line.\n3rd value is the pitch ranging from 0.5 to 2.0.\n4th value is the volume ranging from 0 to 1, but it's sometimes 3 too (from real note block).",
+  "version": "1.1",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "credits": "1234ab",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
