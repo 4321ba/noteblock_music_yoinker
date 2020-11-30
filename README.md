@@ -1,9 +1,10 @@
 # noteblock_music_yoinker
  Minecraft Forge mod for yoinking noteblock music you hear.
 
-Requires Minecraft 1.15.2 and Forge.
+Requires Minecraft 1.12.2 or 1.15.2 and Forge.
 
-The new release, `noteblock_music_yoinker-1.1.jar` fixes the issue #1 (and also #2).
+The new release for 1.15.2, `noteblock_music_yoinker-1.15.2-1.1.jar` fixes the issue #1 (and also #2).  
+I also backported the mod for 1.12.2 (so that you can use it with Wynntils), and managed to improve the input handling: you can now remap the record key using the Controls menu in this version: `noteblock_music_yoinker-1.12.2-1.0.jar`.
 
 # Usage
 
