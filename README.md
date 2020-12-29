@@ -1,4 +1,5 @@
-# noteblock_music_yoinker
+# Noteblock Music Yoinker
+
  Minecraft Forge mod for yoinking noteblock music you hear.
 
 Requires Minecraft 1.12.2 or 1.15.2 and Forge.
@@ -15,9 +16,18 @@ Press R to start recording music to the `.minecraft/recorded_music` folder. Pres
 File format:  
 Music is recorded in csv format separated with `,`, every line is a new note.  
 1st value is the instrument.  
-2nd value is the number of ticks since the previous line.  
+2nd value is the number of ticks since the previous line (1 tick = 1/40 second).  
 3rd value is the pitch ranging from 0.5 to 2.0.  
 4th value is the volume ranging from 0 to 1, but it's sometimes 3 too (from real note block).
+
+# Differences between versions
+
+The version for 1.12 records all sounds, even if they cut midway playing, or bug out early.  
+1.15 on the other hand has a system to not play sounds if too many is playing, meaning there won't be cuts midway the notes, instead there will be notes missing, in the recording too. That's why I suggest using the 1.12 version. This can be avoided with a resource pack that shortens the notes that play.
+
+In 1.12 the tick used to record the music is synchronized with the note playback meaning the ticks will always be even (multiplicate of 2). This isn't the case with 1.15, meaning a laggy 4-4 tick delay mostly looks 6-2 in 1.12 and 5-3 in 1.15.  
+
+This isn't related to Minecraft versions, but to the mod version, in 1.12 it uses keybinds and the key needs to be pressed while in the 3D view (in chest e.g. it doesn't work), while in 1.15 it uses a very hacky and bad way that gets the record key no matter where you are, even if you are typing in chat.
 
 # Python scripts
 
