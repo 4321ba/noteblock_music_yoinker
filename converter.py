@@ -14,9 +14,10 @@ def parse_arguments():
     parser.add_argument("-k", "--keep_newcsv", action='store_true', dest="keep_newcsv", help="keep the generated temporary file *.newcsv")
     parser.add_argument("-e", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4, can determine automatically")
     parser.add_argument("-l", "--note_length", type=float, default = -1, help="the number of ticks (1/40 s) for the notes to turn off, if <0 then multiplies the metronome value, default is -1, so it's the same as the metronome value")
+    parser.add_argument("-s", "--can_same_note_play_twice", action='store_true', help="allows more of the same note to play at the same time, so it doesn't shut down those notes earlier than note_length says so")
     return vars(parser.parse_args())
 
-def convert_and_add_off(data, use_visual_percussion, use_melodic_percussion, metronome, note_length):
+def convert_and_add_off(data, use_visual_percussion, use_melodic_percussion, metronome, note_length, can_same_note_play_twice):
     instruments = {  #"name": [channel, program_for_melody_instrument_or_pitch_for_percussion, pitches_to_shift]
         "harp": [0, 6, 0],
         "bass": [2, 32, -24], #MIDI visualizer matches channel 9 to channel 1 and I need bass to be separate from percussion
@@ -71,18 +72,19 @@ def convert_and_add_off(data, use_visual_percussion, use_melodic_percussion, met
                 if len(notes_waiting_for_off) == 0:
                     break
         
-        if i[2] == "0.0": #somehow the pitch got 0.0 (it should be between 0.5 and 2) and math.log threw an error (understandably)
-            continue #this happened in Endless Climb (Tower of Ascension 1) 2 times e.g.
+#        if i[2] == "0.0": #somehow the pitch got 0.0 (it should be between 0.5 and 2) and math.log threw an error (understandably)
+#            continue #this happened in Endless Climb (Tower of Ascension 1) 2 times e.g.
         
         channel = instruments[i[0]][0]
         note = int(math.log(float(i[2]), 2) * 12 + 66.5) + instruments[i[0]][2] if channel != 9 else instruments[i[0]][1]
         volume = 127 if float(i[3]) > 1.0 else int(math.sqrt(float(i[3])) * 127 + 0.5)
         
-        for jndex, j in enumerate(notes_waiting_for_off): #trying to see if there's the same note already playing and offing it
-            if channel == j[1] and note == j[2]:
-                new_data.append(["2", str(current_midi_tick), "Note_off_c", str(channel), str(note), "0"])
-                notes_waiting_for_off.pop(jndex)
-                break
+        if not can_same_note_play_twice:
+            for jndex, j in enumerate(notes_waiting_for_off): #trying to see if there's the same note already playing and offing it
+                if channel == j[1] and note == j[2]:
+                    new_data.append(["2", str(current_midi_tick), "Note_off_c", str(channel), str(note), "0"])
+                    notes_waiting_for_off.pop(jndex)
+                    break
         
         new_data.append(["2", str(current_midi_tick), "Note_on_c", str(channel), str(note), str(volume)])
         notes_waiting_for_off.append([current_midi_tick, channel, note])
@@ -113,7 +115,7 @@ def main():
     args = parse_arguments()
     for file in noteblock_music_utility.get_input_files(args["input_files"]):
         data = noteblock_music_utility.import_csv_file(file)
-        data = convert_and_add_off(data, args["use_visual_percussion"], args["use_melodic_percussion"], args["metronome"], args["note_length"])
+        data = convert_and_add_off(data, args["use_visual_percussion"], args["use_melodic_percussion"], args["metronome"], args["note_length"], args["can_same_note_play_twice"])
         convert_to_midi_file(data, file[:-4], args["keep_newcsv"])
 
 if __name__ == '__main__':

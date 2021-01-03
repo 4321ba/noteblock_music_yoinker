@@ -24,8 +24,8 @@ def main():
     args = parse_arguments()
     for file in [i for i in noteblock_music_utility.get_input_files(args["input_files"]) if not i[-14:-4] == "_amplified"]:
         data = noteblock_music_utility.import_csv_file(file)
-        data = make_beginning_louder(data, args["metronome"])
         data[0][1] = "0"
+        data = make_beginning_louder(data, args["metronome"])
         noteblock_music_utility.create_csv_file(data, file[:-4] + "_amplified.csv")
 
 if __name__ == '__main__':

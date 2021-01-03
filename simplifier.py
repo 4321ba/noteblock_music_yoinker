@@ -24,8 +24,8 @@ def main():
     args = parse_arguments()
     for file in [i for i in noteblock_music_utility.get_input_files(args["input_files"]) if not i[-15:-4] == "_simplified"]:
         data = noteblock_music_utility.import_csv_file(file)
-        data = remove_quiet_notes(data, args["volume"])
         data[0][1] = "0"
+        data = remove_quiet_notes(data, args["volume"])
         noteblock_music_utility.create_csv_file(data, file[:-4] + "_simplified.csv")
 
 if __name__ == '__main__':
