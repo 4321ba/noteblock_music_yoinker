@@ -11,19 +11,19 @@ I also backported the mod for 1.12.2 (so that you can use it with Wynntils), and
 
 # Usage
 
-Press R to start recording music to the `.minecraft/recorded_music` folder. Press R again to stop recording.
+Press R to start recording music to the `.minecraft/recorded_music` folder. Press R again to stop recording. Currently there's no indicator if you're recording or not, you have to see if the file size is growing or look back at the logs.
 
 File format:  
 Music is recorded in csv format separated with `,`, every line is a new note.  
 1st value is the instrument.  
 2nd value is the number of ticks since the previous line (1 tick = 1/40 second).  
 3rd value is the pitch ranging from 0.5 to 2.0.  
-4th value is the volume ranging from 0 to 1, but it's sometimes 3 too (from real note block).
+4th value is the volume ranging from 0 to 1, but it can be bigger (from real note blocks e.g.).  
 
 # Differences between versions
 
-The version for 1.12 records all sounds, even if they cut midway playing, or bug out early.  
-1.15 on the other hand has a system to not play sounds if too many is playing, meaning there won't be cuts midway the notes, instead there will be notes missing, in the recording too. That's why I suggest using the 1.12 version. This can be avoided with a resource pack that shortens the notes that play.
+The version for 1.12 records all note block sounds, even if they cut midway playing, or bug out early.  
+1.15 on the other hand has a system to not play sounds if too many is playing, meaning there won't be cuts midway the notes (which don't matter while recording), instead there will be notes missing, in the recording too. That's why I suggest using the 1.12 version. This can be avoided with a resource pack that shortens the notes that play.
 
 In 1.12 the tick used to record the music is synchronized with the note playback meaning the ticks will always be even (multiplicate of 2). This isn't the case with 1.15, meaning a laggy 4-4 tick delay mostly looks 6-2 in 1.12 and 5-3 in 1.15.  
 
@@ -34,4 +34,5 @@ This isn't related to Minecraft versions, but to the mod version, in 1.12 it use
 I also made a Python script to turn this data into a MIDI file: `converter.py`.  
 Use `antilagger.py` to even out the timings: e.g. replace 7 and then 5 with 6 and 6.  
 Use `simplifier.py` to remove quiet notes and thus simplify the midi.  
+Use `speed_changer.py` to multiply the speed by a constant.  
 Use `amplifier.py` to amplify the beginning of the music, and compensate for the intro of Wynncraft.
