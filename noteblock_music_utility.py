@@ -11,6 +11,7 @@ def get_input_files(files):
         return files
 
 def import_csv_file(file):
+    print("Importing file", file)
     with open(file, newline='') as csv_file:
         csv_data = csvreader(csv_file, delimiter=',', quotechar='|')
         return [row for row in csv_data]
@@ -23,7 +24,7 @@ def create_csv_file(data, file):
 
 def get_metronome_info(data, metronome, return_timings): #metronome is the value defined by the user, -1 if nothing is defined
     
-    if metronome != -1 and not return_timings:
+    if metronome != -1 and not return_timings: #metronome is provided by the user and the script doesn't want timing info
         print("Metronome value is", metronome)
         return metronome
     
@@ -35,28 +36,34 @@ def get_metronome_info(data, metronome, return_timings): #metronome is the value
         timings[int(i[1])] += 1
     timings = {key: value for key, value in sorted(timings.items(), key = lambda item: -item[1])}
     
-    #determine metronome value (the smallest timing used without the lag), mostly a frequent value
+    #determine metronome value (the smallest timing used, without the lag)
     if metronome == -1:
-        possible_metronome_ticks = list(timings.keys())[0:3]
+        
+        possible_metronome_ticks = list(timings.keys())
         if 0 in possible_metronome_ticks:
             possible_metronome_ticks.remove(0)
-        possible_metronome_ticks = possible_metronome_ticks[0:2] #get 2 most frequent delays that aren't 0
         
-        if len(possible_metronome_ticks) == 1:
-            metronome = possible_metronome_ticks[0]
-        elif (possible_metronome_ticks[0] / possible_metronome_ticks[1]).is_integer(): #one is the multiplicate of the other
-            metronome = possible_metronome_ticks[1]
-        elif (possible_metronome_ticks[1] / possible_metronome_ticks[0]).is_integer():
-            metronome = possible_metronome_ticks[0]
-        elif abs(possible_metronome_ticks[0] - possible_metronome_ticks[1]) == 1: #they're the same just the odd one is the one with lag
-            if (possible_metronome_ticks[0] / 2).is_integer:
-                metronome = possible_metronome_ticks[0]
-            else:
-                metronome = possible_metronome_ticks[1]
+        greatest_common_divisor = 0
+        for i in range(1, min(possible_metronome_ticks) + 1):
+            if all(j % i == 0 for j in possible_metronome_ticks):
+                greatest_common_divisor = i
+        
+        if greatest_common_divisor > 2: #this means that it's probably lag-free so we should use the GCD as metronome value
+            metronome = greatest_common_divisor
         else:
-            sysexit("Couldn't find metronome value in " + str(possible_metronome_ticks) + " from " + str(timings))
-    print("Metronome value is", metronome)
+            possible_metronome_ticks = possible_metronome_ticks[0:2] #get 2 most frequent delays, those are the best bet if it's laggy
+            if len(possible_metronome_ticks) == 1:
+                metronome = possible_metronome_ticks[0]
+            elif (possible_metronome_ticks[0] / possible_metronome_ticks[1]).is_integer(): #one is the multiplicate of the other
+                metronome = possible_metronome_ticks[1]
+            elif (possible_metronome_ticks[1] / possible_metronome_ticks[0]).is_integer():
+                metronome = possible_metronome_ticks[0]
+            elif 1 <= abs(possible_metronome_ticks[0] - possible_metronome_ticks[1]) <= 2: #they're the same just one is with lag (1 difference in 1.15, 2 in 1.12)
+                metronome = possible_metronome_ticks[0] #hopefully the real value appears more times than the laggy one
+            else:
+                sysexit("Couldn't find metronome value in " + str(possible_metronome_ticks) + " from " + str(timings))
 
+    print("Metronome value is", metronome)
     if return_timings:
         return metronome, timings
     return metronome

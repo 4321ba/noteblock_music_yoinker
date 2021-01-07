@@ -6,7 +6,7 @@ import noteblock_music_utility
 def parse_arguments():
     parser = argparse.ArgumentParser(description="make specific .csv files' beginning louder")
     parser.add_argument("input_files", nargs="*", default = [], help="csv files to convert, leave blank for all from current directory")
-    parser.add_argument("-m", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4, needed for the louding")
+    parser.add_argument("-m", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4, needed for the amplifying")
     return vars(parser.parse_args())
 
 def make_beginning_louder(data, metronome):
