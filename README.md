@@ -1,13 +1,11 @@
 # Noteblock Music Yoinker
 
- Minecraft Forge mod for yoinking noteblock music you hear.
+Minecraft Forge mod for yoinking noteblock music you hear.  
+Plus extra utility Python scripts to manipulate the data.
 
-Requires Minecraft 1.12.2 or 1.15.2 and Forge.
+Requires Minecraft 1.12.2 or 1.15.2 and Forge, and Python 3 for the scripts.
 
-Showcase video: https://youtu.be/corLmU4yWqk
-
-The new release for 1.15.2, `noteblock_music_yoinker-1.15.2-1.1.jar` fixes the issue #1 (and also #2).  
-I also backported the mod for 1.12.2 (so that you can use it with Wynntils), and managed to improve the input handling: you can now remap the record key using the Controls menu in this version: `noteblock_music_yoinker-1.12.2-1.0.jar` (this version also doesn't have the issue #1 and #2).
+Showcase video: https://youtu.be/corLmU4yWqk .
 
 # Usage
 
@@ -16,9 +14,14 @@ Press R to start recording music to the `.minecraft/recorded_music` folder. Pres
 File format:  
 Music is recorded in csv format separated with `,`, every line is a new note.  
 1st value is the instrument.  
-2nd value is the number of ticks since the previous line (1 tick = 1/40 second).  
+2nd value is the number of ticks since the previous line (1 tick = 1/40 second), integer.  
 3rd value is the pitch ranging from 0.5 to 2.0.  
-4th value is the volume ranging from 0 to 1, but it can be bigger (from real note blocks e.g.).  
+4th value is the volume ranging from 0.0 to 1.0, but it can be bigger (from real note blocks e.g.).  
+
+# Releases
+
+The new release for 1.15.2, `noteblock_music_yoinker-1.15.2-1.1.jar` fixes the issue #1 (and also #2).  
+I also backported the mod for 1.12.2 (so that you can use it with Wynntils), and managed to improve the input handling: you can now remap the record key using the Controls menu in this version: `noteblock_music_yoinker-1.12.2-1.0.jar` (this version also doesn't have the issue #1 and #2).
 
 # Differences between versions
 
