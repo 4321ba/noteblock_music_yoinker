@@ -8,6 +8,7 @@ def parse_arguments():
     parser.add_argument("input_files", nargs="*", default = [], help="csv files to convert, leave blank for all from current directory")
     parser.add_argument("-m", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4 makes 3 or 5 round to 4")
     parser.add_argument("-p", "--precision", type=float, default = 0.16, help="portion of the metronome value to not antilag in e.g. the default 0.16 makes it so that the numbers 3 and 5 won't be rounded with a metronome value of 8 (4 +- 8 * 0.16)")
+    parser.add_argument("-a", "--analyze", action='store_true', dest="analyze", help="doesn't make a new file, just prints the information")
     return vars(parser.parse_args())
 
 def antilag(data, metronome, precision):
@@ -32,7 +33,8 @@ def main():
         data = noteblock_music_utility.import_csv_file(file)
         data[0][1] = "0"
         data = antilag(data, args["metronome"], args["precision"])
-        noteblock_music_utility.create_csv_file(data, file[:-4] + "_antilag.csv")
+        if not args["analyze"]:
+            noteblock_music_utility.create_csv_file(data, file[:-4] + "_antilag.csv")
 
 if __name__ == '__main__':
     main()

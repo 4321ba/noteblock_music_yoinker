@@ -8,10 +8,169 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="convert specific .csv files to .nbs files")
     parser.add_argument("input_files", nargs="*", default = [], help="csv files to convert, leave blank for all from current directory")
     parser.add_argument("-m", "--metronome", type=int, default = -1, help="the smallest possible tick difference between notes, e.g. 4, can be determined automatically, 40 / metronome = tempo")
-    parser.add_argument("-d", "--dumb_note_placement", action='store_false', dest="is_note_placement_smart", help="doesn't make gaps between notes that are at the same tick, where it thinks it makes sense")
+    parser.add_argument("-s", "--smartness", type=int, default = 1, help="how smart the program makes gaps between notes, 0: no gaps, 1 (default): orders the notes by instrument and makes gaps between instruments, 2: keeps original order and uses a quite good algorithm, 3: uses original order, tests all possible scenarios and may be very slow for large files")
     parser.add_argument("-l", "--loopable", action='store_true', dest="is_loopable", help="this turns the nbs file loop on")
     return vars(parser.parse_args())
 
+def get_dummy_note_placement(data):
+    max_layer_count = 0
+    layer_offsets = []
+    layer_names = []
+    
+    current_layer_count = 0
+    for i in data:
+        if i[1] == "0":
+            current_layer_count += 1
+        else:
+            if current_layer_count > max_layer_count:
+                max_layer_count = current_layer_count
+            current_layer_count = 1
+        layer_offsets.append(1) #we only want to have jumps=1 every time here
+    if current_layer_count > max_layer_count:
+        max_layer_count = current_layer_count
+    for i in range(max_layer_count):
+        layer_names.append("Mix " + str(i + 1)) #so we can see which is the last line there's information in
+    return max_layer_count, layer_offsets, layer_names
+    
+def get_all_layer_counts(data):
+    #Here we get all the information from data, how many notes are in each instrument at the ticks, in the same group
+    all_layers = [[[data[0][0], 0]]] #e.g. [[["harp", 3], ["bass", 4], ["harp", 2], ...], [["bass", 1], ...], ...] 3D list, 1st D: time, 2nd D: instruments, 3rd: instrument name and the number of layers with it
+    for i in data:
+        if i[1] == "0":
+            if all_layers[-1][-1][0] == i[0]: #if the last note's name is the same
+                all_layers[-1][-1][1] += 1
+            else:
+                all_layers[-1].append([i[0], 1])
+        else:
+            all_layers.append([[i[0], 1]])
+    return all_layers
+    
+def get_best_layers_with_preference_algorithm(all_layers):
+    #Here we determine what order the layers will be in, based on the preference value
+    layers = [] #e.g. [["harp", 3], ["bass", 4], ["harp", 2], ...] the number of layers with that instrument
+    while len(all_layers) > 0:
+        preference = {} #{"harp": [*preference value*, *max number of notes*], "bass": [*preference value*, *max number of notes*], ...}
+        for tick in all_layers:
+            if tick[0][0] not in preference:
+                preference[tick[0][0]] = [0, 0]
+            preference[tick[0][0]][0] += len(tick) ** 2 #preference value is calculated by how many different instruments are behind the particular instrument, squared; the biggest value wins
+            if preference[tick[0][0]][1] < tick[0][1]:
+                preference[tick[0][0]][1] = tick[0][1]
+        preference = {key: value for key, value in sorted(preference.items(), key = lambda item: -item[1][0])} #this not only finds the biggest value, but organizes it descending, which we may not really want
+        chosen_instrument = list(preference.keys())[0]
+        layers.append([chosen_instrument, preference[chosen_instrument][1]])
+#        print(preference, chosen_instrument)
+        new_layers = []
+        for tick in all_layers: #deleting the instruments that got chosen
+            if tick[0][0] != chosen_instrument:
+                new_layers.append(tick)
+            elif len(tick) > 1:
+                new_layers.append(tick[1:])
+        all_layers = new_layers
+    return layers
+    
+def get_jumps_and_layer_names(data, layers):
+    max_layer_count = 0
+    layer_offsets = []
+    layer_names = []
+    #Here we populate the layer_offsets, based on the layers data
+    new_layers = layers.copy()
+    notes_in_current_instrument = 0
+    for i in data:
+        jumps = 1
+        if i[1] != "0":
+            new_layers = layers.copy()
+            notes_in_current_instrument = 0
+        if new_layers[0][0] == i[0]:
+            notes_in_current_instrument += 1
+        else:
+            while new_layers[0][0] != i[0]:
+                jumps += new_layers.pop(0)[1]
+            jumps -= notes_in_current_instrument
+            notes_in_current_instrument = 1
+        layer_offsets.append(jumps)
+    #Here we get the names for the layers
+    for layer in layers:
+        max_layer_count += layer[1]
+        for i in range(layer[1]):
+            layer_names.append(layer[0].capitalize() + " " + str(i + 1))
+    return max_layer_count, layer_offsets, layer_names
+    
+def get_smart_note_placement(data):
+    all_layers = get_all_layer_counts(data)
+    layers = get_best_layers_with_preference_algorithm(all_layers)
+    print("Identified layers:", layers)
+    return get_jumps_and_layer_names(data, layers)
+
+def recursive_analyzer(all_layers, max_count, recursive_counter):
+    if recursive_counter >= max_count:
+        return False
+    preference = {} #e.g. {"harp": 3, "bass": 2, ...}, the number is the max number of notes
+    best_layer = []
+    for tick in all_layers:
+        if tick[0][0] not in preference.keys():
+            preference[tick[0][0]] = 0
+        if preference[tick[0][0]] < tick[0][1]:
+            preference[tick[0][0]] = tick[0][1]
+    if len(preference) + recursive_counter >= max_count:
+        return False
+    for chosen_instrument in preference:
+        new_layers = []
+        for tick in all_layers: #deleting the instruments that got chosen
+            if tick[0][0] != chosen_instrument:
+                new_layers.append(tick)
+            elif len(tick) > 1:
+                new_layers.append(tick[1:])
+        if len(new_layers) == 0:
+            return [preference[chosen_instrument], [chosen_instrument, preference[chosen_instrument]]]
+        recursed_info = recursive_analyzer(new_layers, max_count, recursive_counter + 1)
+        if recursed_info and (len(best_layer) == 0 or preference[chosen_instrument] + recursed_info[0] < best_layer[0]):
+            best_layer = [preference[chosen_instrument] + recursed_info[0], [chosen_instrument, preference[chosen_instrument]]] + recursed_info[1:]
+    return best_layer
+    
+def get_recursive_note_placement(data):
+    all_layers = get_all_layer_counts(data)
+    layers = get_best_layers_with_preference_algorithm(all_layers)
+    original_layer_count = sum(i[1] for i in layers)
+    layers = recursive_analyzer(all_layers, len(layers), 0)[1:]
+    print("Identified layers:", layers)
+    print("Saved lines:", original_layer_count - sum(i[1] for i in layers))
+    return get_jumps_and_layer_names(data, layers)
+    
+def reorganizer(data, instruments):
+    new_data = [[]] #e.g.: [[["harp", "0", "1.0", "1.0"], [...], ...], [[...], [...], ...]]
+    delays = [data[0][1]]
+    layers = {}
+    data[0][1] = "0"
+    for i in data:
+        if i[1] == "0":
+            new_data[-1].append(i)
+        else:
+            delays.append(i[1])
+            new_data.append([[i[0], "0", i[2], i[3]]])
+    
+    data = []
+    for index, tick in enumerate(new_data):
+        tick.sort(key = lambda x: instruments[x[0]])
+        tick[0][1] = str(delays[index])
+        data += tick
+        instrument_count = {}
+        for note in tick:
+            if not note[0] in instrument_count.keys():
+                instrument_count[note[0]] = 0
+            instrument_count[note[0]] += 1
+        for instrument in instrument_count:
+            if instrument not in layers.keys() or layers[instrument] < instrument_count[instrument]:
+                layers[instrument] = instrument_count[instrument]
+    
+    new_layers = []
+    for instrument in [key for key, value in sorted(instruments.items(), key = lambda item: item[1])]:
+        if instrument in layers.keys():
+            new_layers.append([instrument, layers[instrument]])
+    print("Identified layers:", new_layers)
+    max_layer_count, layer_offsets, layer_names = get_jumps_and_layer_names(data, new_layers)
+    return max_layer_count, layer_offsets, layer_names, data
+    
 def write_byte(file, number):
     file.write(bytearray([number]))
 
@@ -26,7 +185,7 @@ def write_string(file, string):
     write_integer(file, len(binary_string))
     file.write(binary_string)
 
-def convert_to_nbs_file(data, metronome, is_loopable, is_note_placement_smart, filename):
+def convert_to_nbs_file(data, metronome, is_loopable, smartness, filename):
     
     instruments = {
         "harp": 0,
@@ -48,80 +207,20 @@ def convert_to_nbs_file(data, metronome, is_loopable, is_note_placement_smart, f
     }
     
     metronome = noteblock_music_utility.get_metronome_info(data, metronome, False)
-    tempo = int(160 / metronome + 0.5) * 25
+    tempo = int(160 / metronome + 0.5) * 25 #rounding to multiplicate of 25 because ONBS can't be more precise and we don't trust that it can round well
     
     max_layer_count = 0
-    layer_offsets = [] #stores the value for each note in the same order as data
-    if is_note_placement_smart:
-        layers = [] #e.g. [["harp", 3], ["bass", 4], ["harp", 2], ...] the number of layers with instruments
-        current_layers = [[data[0][0], 0]] #same structure as layers
-        data.append(["harp", "1", "1.0", "1.0"]) #adding a note to the end to trigger the analization of the last real notes
-        for i in data:
-            if i[1] == "0":
-                if current_layers[-1][0] == i[0]:
-                    current_layers[-1][1] += 1
-                else:
-                    current_layers.append([i[0], 1])
-            else:
-                print("current:", current_layers)
-                layer_index = 0
-                for layer in current_layers:
-                    if len(layers) <= layer_index:
-                        layers.append(layer)
-                    elif layers[layer_index][0] == layer[0]:
-                        if layer[1] > layers[layer_index][1]:
-                            layers[layer_index][1] = layer[1]
-                        layer_index += 1
-                    else:
-                        found_layer = -1
-                        for jndex, j in enumerate(layers[layer_index:]):
-                            if j[0] == layer[0]:
-                                found_layer = jndex
-                                break
-                        print("new layer", layer, ", found index:", found_layer, "at spliced layers:", layers[layer_index:], ", normal layers:", layers)
-                        if found_layer == -1:
-                            layers.insert(layer_index + 1, layer)
-                            layer_index += 2
-                        else:
-                            layer_index += found_layer
-                            print("testing found index, total:", layer_index)
-                            if layer[1] > layers[layer_index][1]:
-                                layers[layer_index][1] = layer[1]
-                print("overall:", layers)
-                current_layers = [[i[0], 1]]
-        data.pop() #removing the added note at the end
-        
-        new_layers = layers.copy()
-        notes_in_current_instrument = 0
-        for i in data:
-            jumps = 1
-            if i[1] != "0":
-                new_layers = layers.copy()
-                notes_in_current_instrument = 0
-            if new_layers[0][0] != i[0]:
-                while new_layers[0][0] != i[0]:
-                    jumps += new_layers.pop(0)[1]
-                jumps -= notes_in_current_instrument
-                notes_in_current_instrument = 1
-            else:
-                notes_in_current_instrument += 1
-            layer_offsets.append(jumps)
-        print(layer_offsets)
-        
-        for i in layers:
-            max_layer_count += i[1]
-    
+    layer_offsets = [] #stores the "jumps to next layer" value for each note in the same order as data stores the notes
+    layer_names = [] #smart note placement names the track based on the instrument
+
+    if smartness == 0:
+        max_layer_count, layer_offsets, layer_names = get_dummy_note_placement(data)
+    elif smartness == 1:
+        max_layer_count, layer_offsets, layer_names, data = reorganizer(data, instruments)
+    elif smartness == 2:
+        max_layer_count, layer_offsets, layer_names = get_smart_note_placement(data)
     else:
-        current_layer_count = 0
-        for i in data:
-            if i[1] == "0":
-                current_layer_count += 1
-            else:
-                if current_layer_count > max_layer_count:
-                    max_layer_count = current_layer_count
-                current_layer_count = 1
-        if current_layer_count > max_layer_count:
-            max_layer_count = current_layer_count
+        max_layer_count, layer_offsets, layer_names = get_recursive_note_placement(data)
     
     #file format: https://opennbs.org/nbs
     with open(filename + ".nbs", "wb") as file:
@@ -154,7 +253,7 @@ def convert_to_nbs_file(data, metronome, is_loopable, is_note_placement_smart, f
             if int(int(i[1]) / metronome + 0.5) > 0:
                 write_short(file, 0) #close previous tick
                 write_short(file, int(int(i[1]) / metronome + 0.5)) #jumps to next tick
-            write_short(file, layer_offsets.pop(0) if is_note_placement_smart else 1) #jumps to next layer
+            write_short(file, layer_offsets.pop(0)) #jumps to next layer
             write_byte(file, instruments[i[0]]) #instrument
             write_byte(file, int(math.log(float(i[2]), 2) * 12 + 45.5)) #pitch
             write_byte(file, int(float(i[3]) * 100 + 0.5)) #volume
@@ -164,7 +263,7 @@ def convert_to_nbs_file(data, metronome, is_loopable, is_note_placement_smart, f
         write_short(file, 0) #closing the notes section
         
         for i in range(max_layer_count): #this part is said to be optional, except ONBS hangs when not provided
-            write_string(file, "")
+            write_string(file, layer_names[i])
             write_byte(file, 0)
             write_byte(file, 100)
             write_byte(file, 100)
@@ -174,7 +273,7 @@ def main():
     args = parse_arguments()
     for file in noteblock_music_utility.get_input_files(args["input_files"]):
         data = noteblock_music_utility.import_csv_file(file)
-        convert_to_nbs_file(data, args["metronome"], args["is_loopable"], args["is_note_placement_smart"], file[:-4])
+        convert_to_nbs_file(data, args["metronome"], args["is_loopable"], args["smartness"], file[:-4])
 
 if __name__ == '__main__':
     main()

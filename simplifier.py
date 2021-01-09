@@ -6,7 +6,7 @@ import noteblock_music_utility
 def parse_arguments():
     parser = argparse.ArgumentParser(description="simplify specific .csv files by removing notes under a certain volume")
     parser.add_argument("input_files", nargs="*", default = [], help="csv files to convert, leave blank for all from current directory")
-    parser.add_argument("-v", "--volume", type=float, default = 0.71, help="removes the notes under this value")
+    parser.add_argument("-v", "--volume", type=float, default = 0.75, help="removes the notes under this value")
     return vars(parser.parse_args())
 
 def remove_quiet_notes(data, volume):
