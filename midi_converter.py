@@ -13,11 +13,12 @@ def parse_arguments():
     parser.add_argument("-e", "--melodic_percussion", action='store_true', dest="use_melodic_percussion", help="maps percussion instruments to random drums to preserve pitch (snare: program 114, hat: program 119, basedrum: program 116)")
     parser.add_argument("-k", "--keep_newcsv", action='store_true', dest="keep_newcsv", help="keep the generated temporary file *.newcsv")
     parser.add_argument("-m", "--metronome", type=int, default = -1, help="the smallest possible miditick difference between notes, e.g. 4, can be determined automatically")
+    parser.add_argument("-f", "--speed_fine_tune", type=float, default = 1, help="my solution to obscure tempo: metronome value must be integer, but if in theory it is 10/3 e.g. (meaning 40/(10/3)=12 tps in NBS) and in reality it is 3, you should set this to 3/(10/3) = 0.9 meaning the speed will be multiplied by 0.9 and it will be slower then expected")
     parser.add_argument("-l", "--note_length", type=float, default = -1, help="the number of ticks (1/40 s) for the notes to turn off, if <0 then multiplies the metronome value, default is -1, so it's the same as the metronome value")
     parser.add_argument("-s", "--can_same_note_play_twice", action='store_true', help="allows more of the same note to play at the same time, so it doesn't shut down those notes earlier than note_length says so")
     return vars(parser.parse_args())
 
-def convert_and_add_off(data, use_visual_percussion, use_melodic_percussion, metronome, note_length, can_same_note_play_twice):
+def convert_and_add_off(data, use_visual_percussion, use_melodic_percussion, metronome, note_length, can_same_note_play_twice, speed_fine_tune):
     instruments = {  #"name": [channel, program_for_melody_instrument_or_pitch_for_percussion, pitches_to_shift]
         "harp": [0, 6, 0],
         "bass": [2, 32, -24], #MIDI visualizer matches channel 9 to channel 1 and I need bass to be separate from percussion
@@ -49,7 +50,7 @@ def convert_and_add_off(data, use_visual_percussion, use_melodic_percussion, met
         ["0", "0", "Header", "1", "2", str(metronome * 4)], #number of clock pulses per quarter note
         ["1", "0", "Start_track"],
 #        ["1", "0", "Time_signature", "4", "2", "5", "8"], #why would I provide anything if I know nothing about this
-        ["1", "0", "Tempo", str(metronome * 100000)], #The tempo is specified as the Number of microseconds per quarter note; 40 midi ticks always mean 1 second
+        ["1", "0", "Tempo", str(int(metronome * 100000 / speed_fine_tune + 0.5))], #The tempo is specified as the Number of microseconds per quarter note; 40 midi ticks always mean 1 second
         ["1", "0", "End_track"],
         ["2", "0", "Start_track"],
         ]
@@ -115,7 +116,7 @@ def main():
     args = parse_arguments()
     for file in noteblock_music_utility.get_input_files(args["input_files"]):
         data = noteblock_music_utility.import_csv_file(file)
-        data = convert_and_add_off(data, args["use_visual_percussion"], args["use_melodic_percussion"], args["metronome"], args["note_length"], args["can_same_note_play_twice"])
+        data = convert_and_add_off(data, args["use_visual_percussion"], args["use_melodic_percussion"], args["metronome"], args["note_length"], args["can_same_note_play_twice"], args["speed_fine_tune"])
         convert_to_midi_file(data, file[:-4], args["keep_newcsv"])
 
 if __name__ == '__main__':

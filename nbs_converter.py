@@ -6,9 +6,10 @@ import noteblock_music_utility
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="convert specific .csv files to .nbs files")
-    parser.add_argument("input_files", nargs="*", default = [], help="csv files to convert, leave blank for all from current directory")
-    parser.add_argument("-m", "--metronome", type=int, default = -1, help="the smallest possible tick difference between notes, e.g. 4, can be determined automatically, 40 / metronome = tempo")
-    parser.add_argument("-s", "--smartness", type=int, default = 1, help="how smart the program makes gaps between notes, 0: no gaps, 1 (default): orders the notes by instrument and makes gaps between instruments, 2: keeps original order and uses a quite good algorithm, 3: uses original order, tests all possible scenarios and may be very slow for large files")
+    parser.add_argument("input_files", nargs="*", default=[], help="csv files to convert, leave blank for all from current directory")
+    parser.add_argument("-m", "--metronome", type=int, default=-1, help="the smallest possible tick difference between notes, e.g. 4, can be determined automatically, 40 / metronome = tempo")
+    parser.add_argument("-f", "--speed_fine_tune", type=float, default = 1, help="my solution to obscure tempo: metronome value must be integer, but if in theory it is 10/3 e.g. (meaning 40/(10/3)=12 tps in NBS) and in reality it is 3, you should set this to 3/(10/3) = 0.9 meaning the speed will be multiplied by 0.9 and it will be slower then expected")
+    parser.add_argument("-s", "--smartness", type=int, default=1, help="how smart the program makes gaps between notes, 0: no gaps, 1 (default): orders the notes by instrument and makes gaps between instruments, 2: keeps original order and uses a quite good algorithm, 3: uses original order, tests all possible scenarios and may be very slow for large files")
     parser.add_argument("-l", "--loopable", action='store_true', dest="is_loopable", help="this turns the nbs file loop on")
     return vars(parser.parse_args())
 
@@ -185,7 +186,7 @@ def write_string(file, string):
     write_integer(file, len(binary_string))
     file.write(binary_string)
 
-def convert_to_nbs_file(data, metronome, is_loopable, smartness, filename):
+def convert_to_nbs_file(data, metronome, is_loopable, smartness, filename, speed_fine_tune):
     
     instruments = {
         "harp": 0,
@@ -207,7 +208,7 @@ def convert_to_nbs_file(data, metronome, is_loopable, smartness, filename):
     }
     
     metronome = noteblock_music_utility.get_metronome_info(data, metronome, False)
-    tempo = int(160 / metronome + 0.5) * 25 #rounding to multiplicate of 25 because ONBS can't be more precise and we don't trust that it can round well
+    tempo = int(160 * speed_fine_tune / metronome + 0.5) * 25 #rounding to multiplicate of 25 because ONBS can't be more precise and we don't trust that it can round well
     
     max_layer_count = 0
     layer_offsets = [] #stores the "jumps to next layer" value for each note in the same order as data stores the notes
@@ -273,7 +274,7 @@ def main():
     args = parse_arguments()
     for file in noteblock_music_utility.get_input_files(args["input_files"]):
         data = noteblock_music_utility.import_csv_file(file)
-        convert_to_nbs_file(data, args["metronome"], args["is_loopable"], args["smartness"], file[:-4])
+        convert_to_nbs_file(data, args["metronome"], args["is_loopable"], args["smartness"], file[:-4], args["speed_fine_tune"])
 
 if __name__ == '__main__':
     main()
