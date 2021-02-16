@@ -34,7 +34,8 @@ This isn't related to Minecraft versions, but to the mod version, in 1.12 it use
 
 # Python scripts
 
-Use `midi_converter.py` to turn this data into a MIDI file. Type --help for options.  
+Type --help for options if you want them for any of these.  
+Use `midi_converter.py` to turn this data into a MIDI file.  
 Use `nbs_converter.py` to turn this data into an NBS file.  
 Use `antilagger.py` to even out the timings: e.g. replace 7 and then 5 with 6 and 6.  
 Use `simplifier.py` to remove quiet notes and thus simplify the midi.  
