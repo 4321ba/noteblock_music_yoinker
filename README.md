@@ -38,6 +38,7 @@ Type --help for options if you want them for any of these.
 Use `midi_converter.py` to turn this data into a MIDI file.  
 Use `nbs_converter.py` to turn this data into an NBS file.  
 Use `antilagger.py` to even out the timings: e.g. replace 7 and then 5 with 6 and 6.  
+Use `merger.py` to compare and merge different recordings of the same piece mostly automatically, thus removing lag.  
 Use `simplifier.py` to remove quiet notes and thus simplify the midi.  
 Use `speed_changer.py` to multiply the speed by a constant.  
 Use `amplifier.py` to amplify the beginning of the music, and compensate for the intro of Wynncraft.
