@@ -17,6 +17,8 @@ def is_all_items_same(list):
 # Program to find most frequent  
 # element in a list 
 def most_frequent(list): 
+    if len(list) == 0:
+        return ""
     return max(set(list), key = list.count) 
 
 def merge(data, metronome):
@@ -52,6 +54,8 @@ def merge(data, metronome):
         antilagged_delay = -1
         if timing_compare.count(second_candidate) < timing_compare.count(best_candidate):
             antilagged_delay = best_candidate
+            if timing_compare.count(best_candidate) != len(timing_compare):
+                print("Guessing best value here at line " + str(row_number + 1) + " from " + ", ".join(timing_compare) + ": " + str(best_candidate))
         else:
             antilagged_delay = input("What's the best value from here at line " + str(row_number + 1) + " from " + ", ".join(timing_compare) + ": ")
         new_data.append([current_line[0][0], antilagged_delay, current_line[0][2], current_line[0][3]])
