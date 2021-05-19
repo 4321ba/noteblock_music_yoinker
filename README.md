@@ -37,10 +37,13 @@ This isn't related to Minecraft versions, but to the mod version, in 1.12 it use
 Type `--help` in the command line for options if you want them for any of these.  
 Use `midi_converter.py` to turn this data into a MIDI file.  
 Use `nbs_converter.py` to turn this data into an NBS file.  
+Use `csv_from_nbs_converter` to turn an NBS file into the csv format used by the scripts.  
 Use `antilagger.py` to even out the timings: e.g. replace 7 and then 5 with 6 and 6.  
 Use `merger.py` to compare and merge different recordings of the same piece mostly automatically, thus removing lag (needs to be launched from the command line with input files specified).  
 Use `simplifier.py` to remove quiet notes and thus simplify the midi.  
 Use `speed_changer.py` to multiply the speed by a constant.  
 Use `amplifier.py` to amplify the beginning of the music, and compensate for the intro of Wynncraft.  
 For the midi converter, you'll need the py-midicsv module, install it with e.g.: `pip3 install py-midicsv`.  
-To read the NBS file you currently need [OpenNBS](https://github.com/HielkeMinecraft/OpenNoteBlockStudio) 3.8.0 (or above), because it uses format Version 4.
+To read the NBS file you currently need [OpenNBS](https://github.com/HielkeMinecraft/OpenNoteBlockStudio) 3.8.0 (or above), because it uses format Version 4.  
+However, the NBS to CSV converter uses the old (stuffbydavid) format, and won't work with OpenNBS files.  
+If you have any questions or something doesn't work (it probably won't at first, there are quite a lot of untested scenarios), be sure to open an issue [here](https://github.com/4321ba/noteblock_music_yoinker/issues)!
