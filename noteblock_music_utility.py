@@ -62,6 +62,11 @@ def get_metronome_info(data, metronome, return_timings): #metronome is the value
                 metronome = possible_metronome_ticks[0] #hopefully the real value appears more times than the laggy one
             else:
                 sysexit("Couldn't find metronome value in " + str(possible_metronome_ticks) + " from " + str(timings))
+        
+        #if it seems to be 12 or 8, it should be in reality 6 or 4 most probably
+        if metronome == 8 or metronome == 12:
+            print("Identified a metronome value of", metronome, "but we think it should be", metronome // 2, "instead")
+            metronome = metronome // 2
 
     print("Metronome value is", metronome)
     if return_timings:
