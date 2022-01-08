@@ -257,7 +257,7 @@ def convert_to_nbs_file(data, metronome, is_loopable, smartness, filename, speed
             write_short(file, layer_offsets.pop(0)) #jumps to next layer
             write_byte(file, instruments[i[0]]) #instrument
             write_byte(file, int(math.log(float(i[2]), 2) * 12 + 45.5)) #pitch
-            write_byte(file, int(float(i[3]) * 100 + 0.5)) #volume
+            write_byte(file, int(min(float(i[3]), 1.0) * 100 + 0.5)) #volume
             write_byte(file, 100) #panning
             write_short(file, 0) #pitch fine tuning
         write_short(file, 0) #closing last tick
