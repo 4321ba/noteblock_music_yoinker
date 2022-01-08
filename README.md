@@ -42,6 +42,7 @@ Use `new_nbs_converter.py` to turn this data into an [OpenNBS](https://github.co
 Use `csv_from_nbs_converter` to turn an old (stuffbydavid) formatted NBS file into the csv format used by the scripts.  
 Use `antilagger.py` to even out the timings: e.g. replace 7 and then 5 with 6 and 6.  
 Use `merger.py` to compare and merge different recordings of the same piece mostly automatically, thus removing lag (needs to be launched from the command line with input files specified).  
+Use `averager.py` to average out the timings of multiple recordings.  
 Use `simplifier.py` to remove quiet notes and thus simplify the midi.  
 Use `speed_changer.py` to multiply the speed by a constant.  
 Use `amplifier.py` to amplify the beginning of the music, and compensate for the intro of Wynncraft.  
