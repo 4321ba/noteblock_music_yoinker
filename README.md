@@ -43,6 +43,8 @@ Use `csv_from_nbs_converter` to turn an old (stuffbydavid) formatted NBS file in
 Use `antilagger.py` to even out the timings: e.g. replace 7 and then 5 with 6 and 6.  
 Use `merger.py` to compare and merge different recordings of the same piece mostly automatically, thus removing lag (needs to be launched from the command line with input files specified).  
 Use `averager.py` to average out the timings of multiple recordings.  
+Use `splitter.py` to split a csv file with multiple loops into multiple csv files with single loops.  
+Use `master.py` to utilize many above scripts to remove lag from a csv file with multiple loops, and combine them into one loop with less lag.  
 Use `simplifier.py` to remove quiet notes and thus simplify the midi.  
 Use `speed_changer.py` to multiply the speed by a constant.  
 Use `amplifier.py` to amplify the beginning of the music, and compensate for the intro of Wynncraft.  
