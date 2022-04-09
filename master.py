@@ -33,29 +33,23 @@ def main():
     if (args["metronome"] == -1):
         raise SystemExit("pls gimme metronome value")
     metronome = args["metronome"]
-    metronome = metronome // 2 # halving metronome, in case there are just a very few doublespeed notes sprinkled in
     
     # doing it one way: first antilagging the individual loops, then mergeing them into one loop
-    data_antilagged_full_metronome = []
-    data_antilagged_half_metronome = []
+    data_antilagged = []
     for part in data:
-        data_antilagged_full_metronome.append(antilag(part, metronome*2, 0.05)) # 0.16 TODO
+        data_antilagged.append(antilag(part, metronome, 0.16)) # 0.16 TODO
         print(""); # TODO verbose=False?
-        data_antilagged_half_metronome.append(antilag(part, metronome,   0.05)) # 0.16 TODO
-        print("");
-    data_merged_full = merge(data_antilagged_full_metronome, metronome*2, verbose=False)
-    data_merged_half = merge(data_antilagged_half_metronome, metronome,   verbose=False)
+    print(f"Merging the antilagged files with metronome {metronome}")
+    data_merged = merge(data_antilagged, metronome, verbose=False)
     
     # doing it the other way: first averaging them, then antilag that one loop
     data_averaged = average(data)
-    data_averaged_full = antilag(data_averaged, metronome*2, 0)
-    print("");
-    data_averaged_half = antilag(data_averaged, metronome,   0)
+    data_averaged = antilag(data_averaged, metronome, 0)
     print("");
     
     # merging the 4 different ways we tried to remove lag, to see if they are the same
-    print("4 different ways of antilagging, in order: [merged half metronome], [merged full metronome], [averaged half metronome], [averaged full metronome]");
-    data = [data_merged_half, data_merged_full, data_averaged_half, data_averaged_full]
+    print("2 different ways of antilagging, left: merged, right: averaged");
+    data = [data_merged, data_averaged]
     data = merge(data, metronome)
     
     # we slowed down the whole thing by *100, to be able to fine tune the delays (they are int)

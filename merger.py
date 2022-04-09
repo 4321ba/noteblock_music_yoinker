@@ -21,7 +21,7 @@ def most_frequent(list):
         return ""
     return max(set(list), key = list.count) 
 
-def merge(data, metronome):
+def merge(data, metronome, verbose = True):
     if metronome == -1:
         new_metronome = noteblock_music_utility.get_metronome_info(data[0], -1, False)
         for i in data[1:]:
@@ -54,7 +54,7 @@ def merge(data, metronome):
         antilagged_delay = -1
         if timing_compare.count(second_candidate) < timing_compare.count(best_candidate):
             antilagged_delay = best_candidate
-            if timing_compare.count(best_candidate) != len(timing_compare):
+            if verbose and timing_compare.count(best_candidate) != len(timing_compare):
                 print("Guessing best value here at line " + str(row_number + 1) + " from " + ", ".join(timing_compare) + ": " + str(best_candidate))
         else:
             antilagged_delay = input("What's the best value from here at line " + str(row_number + 1) + " from " + ", ".join(timing_compare) + ": ")

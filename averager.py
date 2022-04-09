@@ -20,7 +20,7 @@ def most_frequent(list):
         return ""
     return max(set(list), key = list.count) 
 
-def merge(data):
+def average(data):
     lengths = [len(i) for i in data]
     max_lines = max(lengths)
     
@@ -47,7 +47,7 @@ def main():
     if len(args["input_files"]) == 0:
         sysexit("Please specify the input files!")
     data = [noteblock_music_utility.import_csv_file(file) for file in args["input_files"]]
-    data = merge(data)
+    data = average(data)
     data[0][1] = "0"
     noteblock_music_utility.create_csv_file(data, args["output"])
 
