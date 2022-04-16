@@ -13,10 +13,12 @@ Press R to start recording music to the `.minecraft/recorded_music` folder. Pres
 
 File format:  
 Music is recorded in csv format separated with `,`, every line is a new note.  
-1st value is the instrument.  
+1st value is the instrument, string.  
 2nd value is the number of ticks since the previous line (1 tick = 1/40 second), integer.  
 3rd value is the pitch ranging from 0.5 to 2.0.  
 4th value is the volume ranging from 0.0 to 1.0, but it can be bigger (from real note blocks e.g.).  
+
+There is an optional header on the first line, like this: `header,[metronome],[fine-tuning]` (e.g.: `header,5,1.05`) where `metronome` is int, and `fine-tuning` is float. This is ignored in scripts except `new_nbs_converter.py` for now. For the meaning of these, see the help text of some scripts (they can also be passed as arguments, in that case the passed argument should be used instead of the file provided one).
 
 # Releases
 
