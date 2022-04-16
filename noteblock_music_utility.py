@@ -10,11 +10,21 @@ def get_input_files(files):
     else:
         return files
 
-def import_csv_file(file):
+def import_csv_file(file, return_header_info=False):
     print("Importing file", file)
     with open(file, newline='') as csv_file:
         csv_data = csvreader(csv_file, delimiter=',', quotechar='|')
-        return [row for row in csv_data]
+        data = [row for row in csv_data]
+    # if they want header info but there was none in the file
+    metronome = -1
+    fine_tuning = 1.0
+    if data[0][0] == "header": # if we found header
+        metronome = int(data[0][1])
+        fine_tuning = float(data[0][2])
+        data = data[1:]
+    if not return_header_info: # if older script, can't use the header info
+        return data
+    return data, metronome, fine_tuning
 
 def create_csv_file(data, file):
     new_data = [','.join(i) for i in data]
